@@ -1,0 +1,27 @@
+name: build-arm64
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build Lib (ARM64)
+        shell: pwsh
+        run: |
+          $sd = "$env:GITHUB_WORKSPACE\pGina\src"
+          msbuild pGina\src\Lib\Lib.vcxproj /p:Configuration=Release /p:Platform=ARM64 /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0 "/p:SolutionDir=$sd"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: Build CredentialProvider (ARM64)
+        shell: pwsh
+        run: |
+          $sd = "$env:GITHUB_WORKSPACE\pGina\src"
+          msbuild pGina\src\CredentialProvider\CredentialProvider.vcxproj /p:Configuration=Release /p:Platform=ARM64 /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0 "/p:SolutionDir=$sd"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: Show result
+        shell: pwsh
+        run: Get-ChildItem -Recurse pGina\src\bin\ARM64 | Select-Object FullName, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pGinaCredentialProvider-arm64
+          path: pGina/src/bin/ARM64/pGinaCredentialProvider.dll
